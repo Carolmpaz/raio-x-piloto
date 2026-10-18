@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Raio-x do piloto – Tako Recruiter</title>
+    <meta
+      name="description"
+      content="Raio-x do piloto do Tako Recruiter: envie a planilha exportada do painel e veja o antes e depois da Nara. Leitura no navegador, cálculo determinístico."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="/vendor/xlsx-0.18.5.full.min.js"></script>
+    <script src="/vendor/chart-4.4.1.umd.js"></script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bar" id="bar">
+      <div class="wrap">
+        <span class="brand">Tako Recruiter</span>
+        <span class="file" id="fileName"></span>
+        <button type="button" class="linkbtn" id="btnPrem" aria-expanded="false" aria-controls="prem">Premissas</button>
+        <button type="button" class="linkbtn" id="btnReset">Trocar planilha</button>
+        <div class="seg" id="areas" role="group" aria-label="Filtrar por área"></div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="intro" id="intro">
+        <span class="eyebrow">Tako Recruiter</span>
+        <h1>Raio-x do piloto, em segundos.</h1>
+        <p class="lead">
+          Coloque a planilha exportada do painel e veja, na hora, o antes e o depois da Nara: tempo até a lista, horas
+          de triagem, alcance fora do horário, funil, adoção e os alertas que o resumo do painel não mostra.
+        </p>
+        <div class="chips">
+          <span class="chip">Lido no seu navegador</span><span class="chip">Cálculo determinístico</span
+          ><span class="chip">Toda conta explicada</span>
+        </div>
+        <div class="drop" id="drop">
+          <strong>Arraste a planilha (.xlsx) para cá</strong>
+          <div class="btns">
+            <button type="button" class="btn primary" id="btnPick">Escolher planilha</button>
+          </div>
+          <input type="file" id="file" accept=".xlsx,.xls" hidden />
+          <div class="privacy">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect x="4" y="10" width="16" height="11" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            <span
+              >A planilha é lida aqui, no seu navegador, e não é enviada para nenhum servidor nem para IA. Todas as
+              contas seguem regras fixas, descritas no fim da página, e dão o mesmo resultado para o mesmo
+              arquivo.</span
+            >
+          </div>
+        </div>
+        <div class="errors" id="errors" role="alert"></div>
+        <details>
+          <summary>O que a planilha precisa ter</summary>
+          <div class="schema">
+            <div>
+              <b>Aba Convites</b> (uma linha por candidato)
+              <ul>
+                <li>ID candidato, ID vaga, Vaga, Recrutador, Área</li>
+                <li>Data do convite, Status da entrevista</li>
+                <li>Data e hora da entrevista, Duração (min)</li>
+                <li>Horário comercial, Aprovado para a próxima fase (1/0)</li>
+                <li>Confirmado pelo gestor</li>
+              </ul>
+            </div>
+            <div>
+              <b>Aba Vagas</b> (uma linha por vaga)
+              <ul>
+                <li>ID vaga, Vaga, Recrutador, Área</li>
+                <li>Situação (ativa ou encerrada)</li>
+                <li>Número de dias para enviar a lista de aprovados para o gestor</li>
+              </ul>
+            </div>
+            <div>
+              <b>Aba Recrutadores</b>
+              <ul>
+                <li>Recrutador, Área</li>
+                <li>Data de liberação do acesso</li>
+                <li>Nota na pesquisa de satisfação (vazio = não respondeu)</li>
+              </ul>
+              <p class="small muted mt-8">A aba Leia-me é opcional: dela vem a data da exportação.</p>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="prem" id="prem" role="region" aria-label="Premissas">
+        <h3>Premissas</h3>
+        <p class="small muted">
+          As datas vêm da planilha. Os números do processo anterior vêm do kickoff e do contrato; ajuste se mudarem.
+          Tudo se recalcula na hora.
+        </p>
+        <div class="prem-grid">
+          <label
+            >Data da exportação <span><span class="tag">da planilha</span></span
+            ><input type="date" id="pExport"
+          /></label>
+          <label
+            >Início do piloto <span><span class="tag">da planilha</span></span
+            ><input type="date" id="pStart"
+          /></label>
+          <label
+            >Fim do piloto <span><span class="tag k">premissa</span></span
+            ><input type="date" id="pEnd"
+          /></label>
+          <label
+            >Entrevistas contratadas <span><span class="tag k">contrato</span></span
+            ><input type="number" id="pPack" min="1" step="10"
+          /></label>
+          <label
+            >Triagem por telefone, mínimo (min) <span><span class="tag k">kickoff</span></span
+            ><input type="number" id="pTriMin" min="1"
+          /></label>
+          <label
+            >Triagem por telefone, máximo (min) <span><span class="tag k">kickoff</span></span
+            ><input type="number" id="pTriMax" min="1"
+          /></label>
+          <label
+            >Triagens por recrutadora por dia, mínimo <span><span class="tag k">kickoff</span></span
+            ><input type="number" id="pDayMin" min="1"
+          /></label>
+          <label
+            >Triagens por recrutadora por dia, máximo <span><span class="tag k">kickoff</span></span
+            ><input type="number" id="pDayMax" min="1"
+          /></label>
+          <label
+            >Dias úteis até a lista, antes <span><span class="tag k">kickoff</span></span
+            ><input type="number" id="pDaysBefore" min="1" step="0.5"
+          /></label>
+          <label
+            >Minutos da recrutadora por candidato com a Nara <span><span class="tag k">premissa</span></span
+            ><input type="number" id="pNara" min="0" step="1"
+          /></label>
+          <label
+            >Jornada (horas por dia) <span><span class="tag k">premissa</span></span
+            ><input type="number" id="pJourney" min="1" step="0.5"
+          /></label>
+          <label
+            >Meta de recrutadores ativos <span><span class="tag k">premissa</span></span
+            ><input type="number" id="pGoal" min="1"
+          /></label>
+        </div>
+      </div>
+    </div>
+
+    <main id="main">
+      <div class="wrap">
+        <section id="s-before">
+          <p class="verdict" id="verdict"></p>
+          <div class="ruler" id="ruler"></div>
+          <div class="cmp" id="cmp"></div>
+        </section>
+
+        <section id="s-kpis">
+          <div class="sec-head">
+            <div>
+              <h2>O piloto em números</h2>
+              <p class="muted" id="kpiNote"></p>
+            </div>
+          </div>
+          <dl class="kpis" id="kpis"></dl>
+        </section>
+
+        <section id="s-pace">
+          <div class="sec-head">
+            <div>
+              <h2>Ritmo do pacote</h2>
+              <p class="muted">
+                Entrevistas por dia, acumulado, meta linear do pacote e projeção no ritmo dos últimos 7 dias.
+              </p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="chart tall"><canvas id="cPace" aria-label="Gráfico de ritmo de entrevistas"></canvas></div>
+          </div>
+          <div class="facts" id="paceFacts"></div>
+        </section>
+
+        <section id="s-time">
+          <div class="sec-head">
+            <div>
+              <h2>Quando o candidato faz a entrevista</h2>
+              <p class="muted">Horário comercial = segunda a sexta, das 8h às 17h59.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Por hora do dia</h3>
+            <div class="chart"><canvas id="cHour" aria-label="Entrevistas por hora"></canvas></div>
+          </div>
+          <div class="grid2 mt-20">
+            <div class="panel">
+              <h3>Por dia da semana</h3>
+              <div class="chart"><canvas id="cWeek" aria-label="Entrevistas por dia da semana"></canvas></div>
+            </div>
+            <div class="panel">
+              <h3>Tempo entre o convite e a entrevista</h3>
+              <div class="chart"><canvas id="cResp" aria-label="Tempo de resposta ao convite"></canvas></div>
+            </div>
+          </div>
+          <div class="facts" id="timeFacts"></div>
+        </section>
+
+        <section id="s-funnel">
+          <div class="sec-head">
+            <div>
+              <h2>Funil e qualidade das listas</h2>
+              <p class="muted">A Nara avalia, a recrutadora aprova, o gestor confirma ou descarta.</p>
+            </div>
+          </div>
+          <div class="funnel" id="funnel"></div>
+          <h3 class="mt-28">Por área</h3>
+          <div class="tbl-wrap"><table id="tArea"></table></div>
+        </section>
+
+        <section id="s-adopt">
+          <div class="sec-head">
+            <div>
+              <h2>Quem está usando</h2>
+              <p class="muted" id="adoptNote"></p>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="panel">
+              <h3>Entrevistas por recrutador</h3>
+              <div class="chart tall"><canvas id="cRec" aria-label="Entrevistas por recrutador"></canvas></div>
+            </div>
+            <div>
+              <div class="tbl-wrap"><table id="tRec"></table></div>
+              <div class="facts" id="surveyFacts"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="s-vagas">
+          <div class="sec-head">
+            <div>
+              <h2>Vaga a vaga</h2>
+              <p class="muted">
+                Alertas automáticos marcam vagas sem convites, encerradas sem aprovados, com conclusão abaixo de 60% ou
+                aprovação abaixo de 10%.
+              </p>
+            </div>
+          </div>
+          <div class="tbl-wrap"><table id="tVagas"></table></div>
+        </section>
+
+        <section id="s-alerts">
+          <div class="sec-head">
+            <div>
+              <h2>O que o resumo do painel não mostra</h2>
+              <p class="muted">Regras aplicadas sempre a todas as áreas, independente do filtro.</p>
+            </div>
+          </div>
+          <div class="alerts" id="alerts"></div>
+        </section>
+
+        <section id="s-recs">
+          <div class="sec-head">
+            <div>
+              <h2>Próximos passos sugeridos</h2>
+              <p class="muted">Gerados a partir dos alertas, com metas que você pode discutir com o cliente.</p>
+            </div>
+          </div>
+          <ol class="recs" id="recs"></ol>
+          <h3 class="mt-24">Critérios para decidir o plano anual</h3>
+          <div class="tbl-wrap"><table id="tCrit"></table></div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <div class="brand">Tako Recruiter</div>
+        <p class="footer-lead">Raio-x do piloto para o time de AI Deployment.</p>
+        <details>
+          <summary>Regras de cálculo</summary>
+          <ul>
+            <li>Entrevista concluída: status começa com “Concluída”. Taxa de conclusão = concluídas ÷ convidados.</li>
+            <li>
+              Fora do horário: coluna Horário comercial = “Não”. Se a coluna faltar, vale segunda a sexta, das 8h às
+              17h59.
+            </li>
+            <li>Dias até a lista: média das vagas encerradas com número de dias preenchido.</li>
+            <li>
+              Horas de triagem antes: entrevistas × média da triagem por telefone. Com a Nara: entrevistas × minutos da
+              recrutadora por candidato.
+            </li>
+            <li>
+              Dias de recrutadora antes: entrevistas ÷ média de triagens por dia. Com a Nara: horas ÷ jornada.
+              Recrutadoras em tempo integral: dias de recrutadora ÷ dias úteis decorridos.
+            </li>
+            <li>
+              Semanas começam na segunda. A semana 1 é a do início do piloto. A projeção usa a média diária dos 7 dias
+              anteriores à exportação.
+            </li>
+            <li>Confirmação do gestor: confirmados ÷ (confirmados + descartados). Pendentes ficam de fora.</li>
+            <li>Recrutador ativo: pelo menos uma entrevista concluída em vaga dele.</li>
+          </ul>
+        </details>
+        <p class="mt-14">Feito por Caroline Paz.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "raio-x-piloto",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Página estática que transforma a planilha exportada do painel do Tako Recruiter em um raio-x do piloto, sem enviar dados para fora do navegador.",
+  "author": "Caroline Paz",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node scripts/dev-server.js",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "prettier": "3.9.10"
+  }
+}

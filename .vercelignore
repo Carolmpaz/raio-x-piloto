@@ -1,0 +1,12 @@
+# só a página estática vai para produção
+node_modules
+tests
+scripts
+.github
+package.json
+package-lock.json
+eslint.config.js
+.prettierrc.json
+.prettierignore
+.editorconfig
+docs
