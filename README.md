@@ -4,7 +4,6 @@ Página estática que lê a planilha exportada do painel do Tako Recruiter e mos
 tempo até a lista, horas e dias de recrutadora, entrevistas fora do horário, ritmo do pacote, funil, adoção, alertas e
 próximos passos.
 
-![Resultado da análise com dados fictícios](docs/raio-x.png)
 
 ## O problema
 
@@ -24,7 +23,6 @@ Na página, arraste a planilha exportada do painel. As capturas abaixo usam dado
 
 <p>
   <img src="docs/inicio.png" alt="Tela inicial" width="49%">
-  <img src="docs/alertas.png" alt="Alertas gerados pelas regras" width="49%">
 </p>
 
 ## Segurança e privacidade
